@@ -1,5 +1,5 @@
 const net = require("net");
-const Iconv = require("iconv").Iconv;
+const iconv = require("iconv-lite");
 const varint = require("varint");
 
 class MinecraftServerListPing {
@@ -42,7 +42,6 @@ class MinecraftServerListPing {
 			let stateBuffer = Buffer.from([0x01]);
 			
 			let dataBuffer = Buffer.concat([packetBuffer, protocolBuffer, hostLengthBuffer, hostBuffer, portBuffer, stateBuffer]);
-			// do I need to use varint here?
 			let dataLengthBuffer = Buffer.from( varint.encode(dataBuffer.length) );
 			
 			let handshakeBuffer = Buffer.concat([dataLengthBuffer, dataBuffer]);
@@ -112,8 +111,6 @@ class MinecraftServerListPing {
 		});
 		
 		client.on("connect", ( ) => {
-			let iconv = new Iconv("UTF-8", "UTF-16BE");
-			
 			// FE — packet identifier for a server list ping
 			// 01 — server list ping's payload (always 1)
 			// FA — packet identifier for a plugin message
@@ -134,7 +131,7 @@ class MinecraftServerListPing {
 			stringLengthBuffer.writeUInt16BE(host.length);
 			
 			// hostname the client is connecting to, encoded as a UTF-16BE string
-			let hostBuffer = iconv.convert(host);
+			let hostBuffer = iconv.encode(host, "utf16-be");
 			
 			// port the client is connecting to, as an int
 			let portBuffer = Buffer.alloc(4);
@@ -146,9 +143,7 @@ class MinecraftServerListPing {
 		});
 		
 		client.on("data", (responseBuffer) => {
-			let iconv = new Iconv("UTF-16BE", "UTF-8");
-			
-			let dataBuffer = iconv.convert( responseBuffer.slice(9, responseBuffer.length) );
+			let dataBuffer = iconv.decode(responseBuffer.slice(9, responseBuffer.length), "utf-16be");
 			
 			let data = dataBuffer.toString( ).split("\0");
 			
@@ -193,9 +188,7 @@ class MinecraftServerListPing {
 		});
 		
 		client.on("data", (responseBuffer) => {
-			let iconv = new Iconv("UTF-16BE", "UTF-8");
-			
-			let dataBuffer = iconv.convert( responseBuffer.slice(9, responseBuffer.length) );
+			let dataBuffer = iconv.decode(responseBuffer.slice(9, responseBuffer.length), "utf-16be");
 			
 			let data = dataBuffer.toString( ).split("\0");
 			
@@ -240,9 +233,7 @@ class MinecraftServerListPing {
 		});
 		
 		client.on("data", (responseBuffer) => {
-			let iconv = new Iconv("UTF-16BE", "UTF-8");
-			
-			let dataBuffer = iconv.convert( responseBuffer.slice(9, responseBuffer.length) );
+			let dataBuffer = iconv.decode(responseBuffer.slice(9, responseBuffer.length), "utf-16be");
 			
 			let data = dataBuffer.toString( ).split("\0");
 			
@@ -261,4 +252,6 @@ class MinecraftServerListPing {
 	
 }
 
-module.exports = MinecraftServerListPing;
+MinecraftServerListPing.ping13("mc.hypixel.net", undefined, (error, data) => {
+	console.log(error, data);
+}, undefined);

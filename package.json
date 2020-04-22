@@ -7,6 +7,9 @@
     "type": "git",
     "url": "https://github.com/mathhulk/minecraft-status.git"
   },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
   "keywords": [
     "minecraft",
     "status",
@@ -19,7 +22,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "iconv": "^2.3.5",
+    "iconv-lite": "^0.5.1",
     "varint": "^5.0.0"
   }
 }
