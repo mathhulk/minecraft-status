@@ -1,7 +1,7 @@
 {
   "name": "minecraft-status",
   "version": "0.1.0",
-  "description": "Node.js module for gathering information about Minecraft Java Edition versions 1.7+, 1.6, 1.4-1.5 servers and Minecraft Bedrock Edition servers.",
+  "description": "Node.js module for gathering information about Minecraft Java Edition servers and Minecraft Bedrock Edition servers.",
   "main": "index",
   "repository": {
     "type": "git",
@@ -15,7 +15,7 @@
   "author": {
     "name": "Matthew Rowland",
     "email": "contact@mathhulk.com",
-    "website": "https://mathhulk.com"
+    "url": "https://mathhulk.com"
   },
   "license": "MIT",
   "dependencies": {
