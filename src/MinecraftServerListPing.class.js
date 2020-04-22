@@ -4,7 +4,11 @@ const varint = require("varint");
 
 class MinecraftServerListPing {
 	
-	// Current
+	/**
+	 *	
+	 *
+	 *
+	 */
 	static ping(protocol = 4, host, port = 25565, callback, timeout = 3000) {
 		
 		let responseDataBuffer = Buffer.alloc(0);
