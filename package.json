@@ -17,5 +17,9 @@
     "email": "contact@mathhulk.com",
     "website": "https://mathhulk.com"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "iconv": "^2.3.5",
+    "varint": "^5.0.0"
+  }
 }

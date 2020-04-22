@@ -1,11 +1,13 @@
 const net = require("net");
-const MinecraftBuffer = require("./MinecraftBuffer");
+const Iconv = require("iconv").Iconv;
+const varint = require("varint");
 
 class MinecraftServerListPing {
 	
+	// Current
 	static ping(protocol = 4, host, port = 25565, callback, timeout = 3000) {
 		
-		let dataBuffer = Buffer.alloc(0);
+		let responseDataBuffer = Buffer.alloc(0);
 		
 		const client = net.createConnection(port, host);
 		
@@ -22,43 +24,65 @@ class MinecraftServerListPing {
 		});
 		
 		client.on("connect", ( ) => {
-			let handshakeBuffer = new MinecraftBuffer( );
-
-			handshakeBuffer.writeVarInt(0); // Packed ID
-			handshakeBuffer.writeVarInt(protocol); // Protocol Version
-			handshakeBuffer.writeString(host); // Server Address
-			handshakeBuffer.writeUShort(port); // Server Port
-			handshakeBuffer.writeVarInt(1); // Next state
-
-			client.write( handshakeBuffer.pack( ) );
-
-			let statusRequestBuffer = new MinecraftBuffer( );
-
-			statusRequestBuffer.writeVarInt(0);
+			// Packet ID
+			let packetBuffer = Buffer.from([0x00]);
 			
-			client.write( statusRequestBuffer.pack( ) );
+			// Protocol Version
+			let protocolBuffer = Buffer.from( varint.encode(protocol) );
+			
+			// Server Address
+			let hostLengthBuffer = Buffer.from( varint.encode(host.length) );
+			let hostBuffer = Buffer.from(host);
+			
+			// Server Port
+			let portBuffer = Buffer.alloc(2);
+			portBuffer.writeUInt16BE(port);
+			
+			// Next state
+			let stateBuffer = Buffer.from([0x01]);
+			
+			let dataBuffer = Buffer.concat([packetBuffer, protocolBuffer, hostLengthBuffer, hostBuffer, portBuffer, stateBuffer]);
+			// do I need to use varint here?
+			let dataLengthBuffer = Buffer.from( varint.encode(dataBuffer.length) );
+			
+			let handshakeBuffer = Buffer.concat([dataLengthBuffer, dataBuffer]);
+			
+			client.write( handshakeBuffer );
+			
+			let requestBuffer = Buffer.from([0x01, 0x00]);
+			
+			client.write( requestBuffer );
 		});
 		
-		client.on("data", (data) => {
-			dataBuffer = Buffer.concat([dataBuffer, data]);
-
-			let buffer = new MinecraftBuffer(dataBuffer);
-			let length;
+		client.on("data", (responseBuffer) => {
+			responseDataBuffer = Buffer.concat([responseDataBuffer, responseBuffer]);
+			
+			let responseDataBufferLength;
 
 			try {
-				length = buffer.readVarInt( );
+				responseDataBufferLength = varint.decode(responseDataBuffer);
 			} catch(error) {
 				return;
 			}
 
-			if(dataBuffer.length < length - buffer.offset ) {
+			if(responseDataBufferLength.length < responseDataBufferLength - varint.decode.bytes) {
 				return;
 			}
-
-			buffer.readVarInt( );
+			
+			let offset = varint.decode.bytes;
+			
+			// Packet ID
+			varint.decode(responseDataBuffer);
+			
+			offset += varint.decode.bytes;
+			
+			// JSON Length
+			varint.decode(responseDataBuffer);
+			
+			offset += varint.decode.bytes;
 
 			try {
-				let response = JSON.parse( buffer.readString( ) );
+				let response = JSON.parse( responseDataBuffer.toString("utf-8", offset - 1) );
 
 				callback(null, response);
 			} catch(error) {
@@ -70,8 +94,8 @@ class MinecraftServerListPing {
 		
 	}
 	
-	/*
-	static pingLegacy(protocol = 73, host, port = 25565, callback, timeout = 3000) {
+	// 1.6
+	static ping16(protocol = 73, host, port = 25565, callback, timeout = 3000) {
 		
 		const client = net.createConnection(port, host);
 		
@@ -88,52 +112,152 @@ class MinecraftServerListPing {
 		});
 		
 		client.on("connect", ( ) => {
-			let request = "";
+			let iconv = new Iconv("UTF-8", "UTF-16BE");
 			
-			// FE: packet identifier for a server list ping
-			// 01: server list ping's payload (always 1)
-			request += String.fromCharCode(0xfe01 >> 8 & 0xFF)
-			request += String.fromCharCode(0xfe01 & 0xFF);
-				
-			// FA: packet identifier for a plugin message
-			request += String.fromCharCode(0xfa);
-				
-			// 00 0B: length of following string, in characters, as a short (always 11)
-			request += String.fromCharCode(11 >> 8 & 0xFF);
-			request += String.fromCharCode(11 & 0xFF);
-			
-			// 00 4D 00 43 00 7C 00 50 00 69 00 6E 00 67 00 48 00 6F 00 73 00 74: the string MC|PingHost encoded as a UTF-16BE string
-			request += "MC|PingHost";
+			// FE — packet identifier for a server list ping
+			// 01 — server list ping's payload (always 1)
+			// FA — packet identifier for a plugin message
+			// 00 0B — length of following string, in characters, as a short (always 11)
+			// 00 4D 00 43 00 7C 00 50 00 69 00 6E 00 67 00 48 00 6F 00 73 00 74 — the string MC|PingHost encoded as a UTF-16BE string
+			let requestBuffer = Buffer.from([0xFE, 0x01, 0xFA, 0x00, 0x0B, 0x00, 0x4D, 0x00, 0x43, 0x00, 0x7C, 0x00, 0x50, 0x00, 0x69, 0x00, 0x6E, 0x00, 0x67, 0x00, 0x48, 0x00, 0x6F, 0x00, 0x73, 0x00, 0x74]);
 			
 			// length of the rest of the data, as a short. Compute as 7 + len(hostname), where len(hostname) is the number of bytes in the UTF-16BE encoded hostname
-			request += String.fromCharCode( (7 + 2 * host.length) >> 8 & 0xFF );
-			request += String.fromCharCode( (7 + 2 * host.length) & 0xFF );
+			let dataLengthBuffer = Buffer.alloc(2);
+			dataLengthBuffer.writeUInt16BE(7 + 2 * host.length);
 			
 			// protocol version
-			request += String.fromCharCode(74);
-				
-			// 00 0B: length of following string, in characters, as a short (always 11)
-			request += String.fromCharCode(host.length >> 8 & 0xFF);
-			request += String.fromCharCode(host.length & 0xFF);
+			let protocolBuffer = Buffer.alloc(1);
+			protocolBuffer.writeUInt8(protocol);
+			
+			// length of following string, in characters, as a short
+			let stringLengthBuffer = Buffer.alloc(2);
+			stringLengthBuffer.writeUInt16BE(host.length);
 			
 			// hostname the client is connecting to, encoded as a UTF-16BE string
-			request += host;
+			let hostBuffer = iconv.convert(host);
 			
 			// port the client is connecting to, as an int
-			request += String.fromCharCode(port >> 24 & 0xFF)
-			request += String.fromCharCode(port >> 16 & 0xFF)
-			request += String.fromCharCode(port >> 8 & 0xFF)
-			request += String.fromCharCode(port & 0xFF)
-
-			client.write( request );
+			let portBuffer = Buffer.alloc(4);
+			portBuffer.writeUInt32BE(port);
+			
+			requestBuffer = Buffer.concat([requestBuffer, dataLengthBuffer, protocolBuffer, stringLengthBuffer, hostBuffer, portBuffer]);
+				
+			client.write(requestBuffer);
 		});
 		
-		client.on("data", (data) => {
-			console.log(data);
+		client.on("data", (responseBuffer) => {
+			let iconv = new Iconv("UTF-16BE", "UTF-8");
+			
+			let dataBuffer = iconv.convert( responseBuffer.slice(9, responseBuffer.length) );
+			
+			let data = dataBuffer.toString( ).split("\0");
+			
+			let result = {
+				"version": {
+					"name": data[1],
+					"protocol": data[0]
+				},
+				"players": {
+					"max": data[4],
+					"online": data[3]
+				},
+				"description": data[2]
+			};
+			
+			callback(null, result);
 		});
 		
 	}
-	*/
+	
+	// 1.4 to 1.5
+	static ping15(host, port = 25565, callback, timeout = 3000) {
+		
+		const client = net.createConnection(port, host);
+		
+		client.setTimeout(timeout);
+		
+		client.on("timeout", (hadError) => {
+			callback(new Error("The client timed out while connecting to " + host + ":" + port), null);
+			
+			client.destroy( );
+		});
+		
+		client.on("error", (error) => {
+			callback(error, null);
+		});
+		
+		client.on("connect", ( ) => {
+			let requestBuffer = Buffer.from([0xFE, 0x01]);
+				
+			client.write(requestBuffer);
+		});
+		
+		client.on("data", (responseBuffer) => {
+			let iconv = new Iconv("UTF-16BE", "UTF-8");
+			
+			let dataBuffer = iconv.convert( responseBuffer.slice(9, responseBuffer.length) );
+			
+			let data = dataBuffer.toString( ).split("\0");
+			
+			let result = {
+				"version": {
+					"name": data[1],
+					"protocol": data[0]
+				},
+				"players": {
+					"max": data[4],
+					"online": data[3]
+				},
+				"description": data[2]
+			};
+			
+			callback(null, result);
+		});
+		
+	}
+	
+	// Beta 1.8 to 1.3
+	static ping13(host, port = 25565, callback, timeout = 3000) {
+		
+		const client = net.createConnection(port, host);
+		
+		client.setTimeout(timeout);
+		
+		client.on("timeout", (hadError) => {
+			callback(new Error("The client timed out while connecting to " + host + ":" + port), null);
+			
+			client.destroy( );
+		});
+		
+		client.on("error", (error) => {
+			callback(error, null);
+		});
+		
+		client.on("connect", ( ) => {
+			let requestBuffer = Buffer.from([0xFE]);
+				
+			client.write(requestBuffer);
+		});
+		
+		client.on("data", (responseBuffer) => {
+			let iconv = new Iconv("UTF-16BE", "UTF-8");
+			
+			let dataBuffer = iconv.convert( responseBuffer.slice(9, responseBuffer.length) );
+			
+			let data = dataBuffer.toString( ).split("\0");
+			
+			let result = {
+				"players": {
+					"max": data[4],
+					"online": data[3]
+				},
+				"description": data[2]
+			};
+			
+			callback(null, result);
+		});
+		
+	}
 	
 }
 

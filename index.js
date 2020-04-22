@@ -1,1 +1,3 @@
-module.exports = require("./src/MinecraftServerListPing.class");
+const MinecraftServerListPing = require("./src/MinecraftServerListPing.class");
+
+module.exports = MinecraftServerListPing;
