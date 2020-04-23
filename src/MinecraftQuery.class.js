@@ -3,7 +3,7 @@ const dgram = require("dgram");
 class MinecraftQuery {
 	
 	// Basic stat
-	static query(host, port, callback) {
+	static query(host, port = 25565, callback, timeout = 3000) {
 		
 		let authenticated = false;
 		
@@ -13,10 +13,16 @@ class MinecraftQuery {
 		
 		client.connect(port, host);
 		
-		client.on("error", (error) => {
-			client.close( );
+		let timeoutFunction = setTimeout( ( ) => {
+			callback(new Error("The client timed out while connecting to " + host + ":" + port), null);
 			
+			client.close( );
+		}, timeout, client);
+		
+		client.on("error", (error) => {
 			callback(error, null);
+			
+			client.close( );
 		});
 		
 		client.on("connect", ( ) => {
@@ -42,6 +48,8 @@ class MinecraftQuery {
 					"game_type": responseData[5]
 				};
 				
+				clearTimeout(timeoutFunction);
+				
 				client.close( );
 				
 				return callback(null, result);
@@ -63,7 +71,7 @@ class MinecraftQuery {
 	}
 	
 	// Full stat
-	static fullQuery(host, port, callback) {
+	static fullQuery(host, port = 25565, callback, timeout = 3000) {
 		
 		let authenticated = false;
 		
@@ -73,10 +81,16 @@ class MinecraftQuery {
 		
 		client.connect(port, host);
 		
-		client.on("error", (error) => {
-			client.close( );
+		let timeoutFunction = setTimeout( ( ) => {
+			callback(new Error("The client timed out while connecting to " + host + ":" + port), null);
 			
+			client.close( );
+		}, timeout, client);
+		
+		client.on("error", (error) => {
 			callback(error, null);
+			
+			client.close( );
 		});
 		
 		client.on("connect", ( ) => {
@@ -126,6 +140,8 @@ class MinecraftQuery {
 						"plugins": plugins
 					}
 				};
+				
+				clearTimeout(timeoutFunction);
 				
 				client.close( );
 				

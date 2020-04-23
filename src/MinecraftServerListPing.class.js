@@ -13,7 +13,7 @@ class MinecraftServerListPing {
 		client.setTimeout(timeout);
 		
 		client.on("timeout", (hadError) => {
-			callback(new Error("The client timed out while connecting to " + host + ":" + port + "."), null);
+			callback(new Error("The client timed out while connecting to " + host + ":" + port), null);
 			
 			client.destroy( );
 		});
@@ -68,13 +68,13 @@ class MinecraftServerListPing {
 			}
 			
 			let offset = varint.decode.bytes;
-			varint.decode(responseDataBuffer); // Packet ID
+			varint.decode(responseDataBuffer, offset); // Packet ID
 			offset += varint.decode.bytes;
-			varint.decode(responseDataBuffer); // JSON Length
+			varint.decode(responseDataBuffer, offset); // JSON Length
 			offset += varint.decode.bytes;
 
 			try {
-				let response = JSON.parse( responseDataBuffer.toString("utf-8", offset - 1) );
+				let response = JSON.parse( responseDataBuffer.toString("utf-8", offset) );
 
 				callback(null, response);
 			} catch(error) {
