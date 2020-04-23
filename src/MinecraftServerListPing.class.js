@@ -143,11 +143,11 @@ class MinecraftServerListPing {
 			let result = {
 				"version": {
 					"name": data[1],
-					"protocol": data[0]
+					"protocol": parseInt(data[0])
 				},
 				"players": {
-					"max": data[4],
-					"online": data[3]
+					"max": parseInt(data[4]),
+					"online": parseInt(data[3])
 				},
 				"description": data[2]
 			};
@@ -188,11 +188,11 @@ class MinecraftServerListPing {
 			let result = {
 				"version": {
 					"name": data[1],
-					"protocol": data[0]
+					"protocol": parseInt(data[0])
 				},
 				"players": {
-					"max": data[4],
-					"online": data[3]
+					"max": parseInt(data[4]),
+					"online": parseInt(data[3])
 				},
 				"description": data[2]
 			};
@@ -232,8 +232,8 @@ class MinecraftServerListPing {
 			
 			let result = {
 				"players": {
-					"max": data[4],
-					"online": data[3]
+					"max": parseInt(data[4]),
+					"online": parseInt(data[3])
 				},
 				"description": data[2]
 			};

@@ -40,8 +40,8 @@ class MinecraftQuery {
 				
 				let result = {
 					"players": {
-						"online": responseData[7],
-						"max": responseData[8]
+						"online": parseInt(responseData[7]),
+						"max": parseInt(responseData[8])
 					},
 					"description": responseData[4],
 					"map": responseData[6],
@@ -127,8 +127,8 @@ class MinecraftQuery {
 						"name": data[7]
 					},
 					"players": {
-						"online": data[13],
-						"max": data[15],
+						"online": parseInt(data[13]),
+						"max": parseInt(data[15]),
 						"sample": players
 					},
 					"description": data[1],
