@@ -1,6 +1,6 @@
 {
   "name": "minecraft-status",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Node.js module for gathering information about Minecraft Java Edition servers and Minecraft Bedrock Edition servers.",
   "main": "index",
   "repository": {
@@ -13,6 +13,8 @@
   "keywords": [
     "minecraft",
     "status",
+	"ping",
+	"query",
     "utilities"
   ],
   "author": {
