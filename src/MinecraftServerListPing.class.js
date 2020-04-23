@@ -4,11 +4,6 @@ const varint = require("varint");
 
 class MinecraftServerListPing {
 	
-	/**
-	 *	
-	 *
-	 *
-	 */
 	static ping(protocol = 4, host, port = 25565, callback, timeout = 3000) {
 		
 		let responseDataBuffer = Buffer.alloc(0);
@@ -73,15 +68,9 @@ class MinecraftServerListPing {
 			}
 			
 			let offset = varint.decode.bytes;
-			
-			// Packet ID
-			varint.decode(responseDataBuffer);
-			
+			varint.decode(responseDataBuffer); // Packet ID
 			offset += varint.decode.bytes;
-			
-			// JSON Length
-			varint.decode(responseDataBuffer);
-			
+			varint.decode(responseDataBuffer); // JSON Length
 			offset += varint.decode.bytes;
 
 			try {
@@ -256,6 +245,4 @@ class MinecraftServerListPing {
 	
 }
 
-MinecraftServerListPing.ping13("mc.hypixel.net", undefined, (error, data) => {
-	console.log(error, data);
-}, undefined);
+module.exports = MinecraftServerListPing;
