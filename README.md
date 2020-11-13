@@ -23,10 +23,21 @@ const { MinecraftServerListPing, MinecraftQuery } = require("minecraft-status");
 ```
 For more information on the [Server List Ping](https://wiki.vg/Server_List_Ping) or [Query](https://wiki.vg/Server_List_Ping) protocols, consult [wiki.vg](https://wiki.vg/).
 
+Unlike previous versions of **minecraft-status**, functions use promises rather than callback functions.
+```js
+MinecraftServerListPing.ping(4, "mc.hypixel.net", 25565, 3000)
+.then(response => {
+    // Success
+})
+.catch(error => {
+    // Error
+});
+```
+
 ## [Server List Ping](https://wiki.vg/Server_List_Ping)
 ### 1.7 and above (current)
 ```js
-MinecraftServerListPing.ping(protocol, host, port, callback, timeout);
+MinecraftServerListPing.ping(protocol, host, port, timeout)
 ``` 
 `protocol` Default **4**. See [protocol version numbers](https://wiki.vg/Protocol_version_numbers). The version the client uses to connect to the server.
 
@@ -63,7 +74,7 @@ MinecraftServerListPing.ping(protocol, host, port, callback, timeout);
 
 ### 1.6
 ```js
-MinecraftServerListPing.ping16(protocol, host, port, callback, timeout);
+MinecraftServerListPing.ping16(protocol, host, port, timeout)
 ``` 
 `protocol` Default **73**. See [protocol version numbers](https://wiki.vg/Protocol_version_numbers). The version the client uses to connect to the server.
 
@@ -91,7 +102,7 @@ MinecraftServerListPing.ping16(protocol, host, port, callback, timeout);
 
 ### 1.4 through 1.5
 ```js
-MinecraftServerListPing.ping15(host, port, callback, timeout);
+MinecraftServerListPing.ping15(host, port, timeout)
 ``` 
 `host` The host, or the domain name, IPv4, or IPv6 address, of the server.
 
@@ -117,7 +128,7 @@ MinecraftServerListPing.ping15(host, port, callback, timeout);
 
 ### Beta 1.8 through 1.3
 ```js
-MinecraftServerListPing.ping13(host, port, callback, timeout);
+MinecraftServerListPing.ping13(host, port, timeout)
 ``` 
 `host` The host, or the domain name, IPv4, or IPv6 address, of the server.
 
@@ -147,7 +158,7 @@ The default query port matches the port established in `server-port`.
 
 ### Basic stat
 ```js
-MinecraftQuery.query(host, port, callback, timeout);
+MinecraftQuery.query(host, port, timeout)
 ```
 `host` The host, or the domain name, IPv4, or IPv6 address, of the server.
 
@@ -171,7 +182,7 @@ MinecraftQuery.query(host, port, callback, timeout);
 
 ### Full stat
 ```js
-MinecraftQuery.fullQuery(host, port, callback, timeout);
+MinecraftQuery.fullQuery(host, port, timeout)
 ```
 `host` The host, or the domain name, IPv4, or IPv6 address, of the server.
 
@@ -200,10 +211,7 @@ MinecraftQuery.fullQuery(host, port, callback, timeout);
     "server_modification": {
         "name": "Paper on 1.15.2-R0.1-SNAPSHOT",
         "plugins": [
-            {
-                "name": "SimpleTpa",
-                "version": "3.0"
-            }
+            "SimpleTpa 3.0"
         ]
     }
 }
