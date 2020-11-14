@@ -1,6 +1,6 @@
 {
   "name": "minecraft-status",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Node.js module for gathering information about Minecraft Java Edition servers and Minecraft Bedrock Edition servers.",
   "main": "index",
   "repository": {
